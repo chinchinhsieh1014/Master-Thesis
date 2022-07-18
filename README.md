@@ -17,9 +17,12 @@
 - Take images with RealSnese from different camera positoins
 -> several hundred Aruco identifications
 - Recoreded information
-  -  Surface ID (SceneNumber+ArUcoID)
-  -  Viewpoint ID (ImageNumber)
-  -  Surface normal [u, v, w] (pointing inward) (from Aruco rotation matrix)
+  -  Surface ID 
+     -  SceneNumber+ArUcoID
+  -  Viewpoint ID
+     -  ImageNumber
+  -  Surface normal
+     -  [u, v, w] (pointing inward) (from Aruco rotation matrix)
   -  Depth data
      - NxN bounding box [x0, y0, x1, y1]
   -  RGB data
