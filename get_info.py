@@ -3,15 +3,18 @@ import rospy
 from sensor_msgs.msg import CameraInfo
 
 def callback(data):
-    rospy.loginfo(data.K)
+    rospy.loginfo(data)
 
 if __name__ == '__main__':
     # Initialize the node
     rospy.init_node('camera', anonymous=True)
-    # Subscribe
-    rospy.Subscriber("/camera/color/camera_info", CameraInfo, callback)
+    # Subscribe - depth
+    rospy.Subscriber("/camera/depth/camera_info", CameraInfo, callback)
+    # Subscribe - color
+    # rospy.Subscriber("/camera/color/camera_info", CameraInfo, callback)
     # keep the node exiting
     rospy.spin()
+    
 ''' Example
 #   1. An undistorted image (requires D and K)                        #
 #   2. A rectified image (requires D, K, R)
