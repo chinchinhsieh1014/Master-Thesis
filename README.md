@@ -3,10 +3,10 @@
 
 ## Requirement
 ### Hardware
-- [Intel RealSense Depth Camera D415(https://dev.intelrealsense.com/docs/docs-get-started)
-
+- [Intel RealSense Depth Camera D415](https://dev.intelrealsense.com/docs/docs-get-started)
 ### Software
 - Environment: Ubuntu 20.04
+- ROS Noetic Ninjemys
 
 ## Step
 1. collect data
