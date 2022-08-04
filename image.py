@@ -6,6 +6,8 @@ import cv2
 import pyrealsense2 as rs2
 import numpy as np
 import sys
+import os
+import pandas as pd
 
 class image():
     def __init__(self):
@@ -15,10 +17,10 @@ class image():
         self.mtx = np.empty([3, 3])
         self.dist = np.empty([1, 5])
         # Depth
-        rospy.Subscriber("/camera/depth/camera_info", CameraInfo, self.depth_info)
-        rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.depth_callback)
-        self.intrinsics = None
-        self.pix = None
+        #rospy.Subscriber("/camera/depth/camera_info", CameraInfo, self.depth_info)
+        #rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.depth_callback)
+        #self.intrinsics = None
+        #self.pix = None
 
     def color_info(self, data):
         self.mtx = np.array(data.K).reshape(3, 3)
@@ -35,6 +37,9 @@ class image():
         image_rgb = cv2.cvtColor(image_cv, cv2.COLOR_BGR2RGB)
         # RGB to Gray
         image_gray = cv2.cvtColor(image_rgb, cv2.COLOR_BGR2GRAY)
+        image_gray = cv2.medianBlur(image_gray,5)
+        # Adaptive threshold
+        th3 = cv2.adaptiveThreshold(image_gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
         corners, ids, rejected = cv2.aruco.detectMarkers(image_gray,
                                                          dictionary,
                                                          parameters=parameters)
@@ -89,17 +94,22 @@ class image():
                 rvecs_np = np.reshape(rvecs, (ids.size,3))
                 tvecs_np = np.reshape(tvecs, (ids.size,3))
                 # RGB data
-                for i in range(ids.size):
-                    print("id:",ids[i])
-                    print("corner:",corner_selected[i])
-                    print("center:",centers[i])
-                    print("M:",M[i])
-                    print("rvec",rvecs_np[i])
-                    print("tvec",tvecs_np[i])
-                    print("-----------------------------")
+                # for i in range(ids.size):
+                #     print("id:",ids[i])
+                #     print("corner:",corner_selected[i])
+                #     print("center:",centers[i])
+                #     print("M:",M[i])
+                #     print("rvec",rvecs_np[i])
+                #     print("tvec",tvecs_np[i])
+                #     print("-----------------------------")
         else:
             frame = image_rgb
-
+        
+        # Collect data
+        path = "/home/yc/catkin_ws/src/realsense-ros/realsense2_camera/dataset/raw"
+        if ids is not None:
+            if len(ids)==5:
+                cv2.imwrite(os.path.join(path,"test.png"),frame)
         # Publish
         pub_frame = rospy.Publisher("image_color_detected", Image, queue_size=10)
         msg_frame = CvBridge().cv2_to_imgmsg(frame, "bgr8")
