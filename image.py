@@ -8,6 +8,7 @@ import numpy as np
 import sys
 import os
 import pandas as pd
+from realsense2_camera.msg import color_data
 
 class image():
     def __init__(self):
@@ -16,11 +17,6 @@ class image():
         rospy.Subscriber("/camera/color/image_rect_color", Image, self.color_callback)
         self.mtx = np.empty([3, 3])
         self.dist = np.empty([1, 5])
-        # Depth
-        #rospy.Subscriber("/camera/depth/camera_info", CameraInfo, self.depth_info)
-        #rospy.Subscriber("/camera/depth/image_rect_raw", Image, self.depth_callback)
-        #self.intrinsics = None
-        #self.pix = None
 
     def color_info(self, data):
         self.mtx = np.array(data.K).reshape(3, 3)
@@ -94,6 +90,13 @@ class image():
                 rvecs_np = np.reshape(rvecs, (ids.size,3))
                 tvecs_np = np.reshape(tvecs, (ids.size,3))
                 # RGB data
+                #publish the topic
+                pub = rospy.Publisher('color_data', color_data, queue_size=10)
+                data = color_data()
+                corner_selected_np=np.asarray(corner_selected, dtype=int)
+                data.detected_corners = corner_selected_np.reshape(-1).tolist()
+                # publish the message to the topic
+                pub.publish(data)
                 # for i in range(ids.size):
                 #     print("id:",ids[i])
                 #     print("corner:",corner_selected[i])
@@ -104,58 +107,16 @@ class image():
                 #     print("-----------------------------")
         else:
             frame = image_rgb
-        
+
         # Collect data
-        path = "/home/yc/catkin_ws/src/realsense-ros/realsense2_camera/dataset/raw"
-        if ids is not None:
-            if len(ids)==5:
-                cv2.imwrite(os.path.join(path,"test.png"),frame)
+        # path = "/home/yc/catkin_ws/src/realsense-ros/realsense2_camera/dataset/raw"
+        # if ids is not None:
+        #     if len(ids)==5:
+        #         cv2.imwrite(os.path.join(path,"test.png"),frame)
         # Publish
         pub_frame = rospy.Publisher("image_color_detected", Image, queue_size=10)
         msg_frame = CvBridge().cv2_to_imgmsg(frame, "bgr8")
         pub_frame.publish(msg_frame)
-
-    def depth_info(self, cameraInfo):
-        self.intrinsics = rs2.intrinsics()
-        self.intrinsics.width = cameraInfo.width
-        self.intrinsics.height = cameraInfo.height
-        self.intrinsics.ppx = cameraInfo.K[2]
-        self.intrinsics.ppy = cameraInfo.K[5]
-        self.intrinsics.fx = cameraInfo.K[0]
-        self.intrinsics.fy = cameraInfo.K[4]
-        if cameraInfo.distortion_model == 'plumb_bob':
-            self.intrinsics.model = rs2.distortion.brown_conrady
-        elif cameraInfo.distortion_model == 'equidistant':
-            self.intrinsics.model = rs2.distortion.kannala_brandt4
-        self.intrinsics.coeffs = [i for i in cameraInfo.D]
-
-    def depth_callback(self, data):
-        # Convert the ROS Image message to a CV2 Image
-        try:
-            image_cv = bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
-            # numpy.ndarray (720, 1280)
-            # pick one pixel among all the pixels with the closest range:
-            indices = np.array(np.where(image_cv == image_cv[image_cv > 0].min()))[:,0]
-            pix = (indices[1], indices[0])
-            self.pix = pix
-            line = '\rDepth at pixel(%3d, %3d): %7.1f(mm).' % (pix[0], pix[1], image_cv[pix[1], pix[0]])
-            if self.intrinsics:
-                depth = image_cv[pix[1], pix[0]]
-                result = rs2.rs2_deproject_pixel_to_point(self.intrinsics, [pix[0], pix[1]], depth)
-                line += '  Coordinate: %8.2f %8.2f %8.2f.' % (result[0], result[1], result[2])
-            sys.stdout.write(line)
-            sys.stdout.flush()
-
-        except CvBridgeError as e:
-            rospy.logerr("CvBridge Error: {0}".format(e))
-        # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
-        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(image_cv, alpha=0.05), cv2.COLORMAP_JET)
-        # (720, 1280, 3)
-
-        # Publish
-        pub = rospy.Publisher('image_depth_detected', Image, queue_size=10)
-        msg_frame = CvBridge().cv2_to_imgmsg(depth_colormap, "bgr8")
-        pub.publish(msg_frame)
 
 if __name__ == '__main__':
     # Aruco marker dictionaries
@@ -164,7 +125,7 @@ if __name__ == '__main__':
     parameters = cv2.aruco.DetectorParameters_create()
 
     # Initialize the node
-    rospy.init_node('image',anonymous=True)
+    rospy.init_node('rgb_frame',anonymous=True)
     # Initialize the CvBridge class
     bridge = CvBridge()
     # Subscribe
