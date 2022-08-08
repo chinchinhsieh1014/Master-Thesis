@@ -97,6 +97,14 @@ class image():
                 data.detected_corners = corner_selected_np.reshape(-1).tolist()
                 # publish the message to the topic
                 pub.publish(data)
+                for i in corner_selected_np:
+                    x0 = min(i[0][0],i[1][0],i[2][0],i[3][0])
+                    y0 = min(i[0][1],i[1][1],i[2][1],i[3][1])
+                    x1 = max(i[0][0],i[1][0],i[2][0],i[3][0])
+                    y1 = max(i[0][1],i[1][1],i[2][1],i[3][1])
+                    # collect data
+                    path = "/home/yc/catkin_ws/src/realsense-ros/realsense2_camera/dataset/raw"
+                    cv2.imwrite(os.path.join(path,"rgb.png"),frame[y0:y1,x0:x1])
                 # for i in range(ids.size):
                 #     print("id:",ids[i])
                 #     print("corner:",corner_selected[i])
@@ -111,8 +119,9 @@ class image():
         # Collect data
         # path = "/home/yc/catkin_ws/src/realsense-ros/realsense2_camera/dataset/raw"
         # if ids is not None:
-        #     if len(ids)==5:
-        #         cv2.imwrite(os.path.join(path,"test.png"),frame)
+        #     if len(ids)==1:
+        #         cv2.imwrite(os.path.join(path,"color.jpg"),frame)
+
         # Publish
         pub_frame = rospy.Publisher("image_color_detected", Image, queue_size=10)
         msg_frame = CvBridge().cv2_to_imgmsg(frame, "bgr8")
