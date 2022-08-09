@@ -19,7 +19,7 @@ class image():
         self.mtx = np.empty([3, 3])
         self.dist = np.empty([1, 5])
         self.sense = 1
-        self.view = 0
+        self.view = 1
 
     def color_info(self, data):
         self.mtx = np.array(data.K).reshape(3, 3)
@@ -93,12 +93,11 @@ class image():
                 rvecs_np = np.reshape(rvecs, (ids.size,3))
                 tvecs_np = np.reshape(tvecs, (ids.size,3))
                 if len(corner_selected)==2:
-                    line = "Capture Sense"+str(self.sense)+"_"+"View"+str(self.view)
-                    print(line)
-                    self.view = self.view+1
-                    rospy.sleep(5)
+                    print("Detected")
+                    print("Collected RGB data(csv and image)")
+                    rospy.sleep(3)
                     #publish the topic
-                    pub = rospy.Publisher('color_data', color_data, queue_size=10)
+                    pub = rospy.Publisher('color_data', color_data, queue_size=10, latch=True)
                     data = color_data()
                     corner_selected_np = np.asarray(corner_selected, dtype=int)
                     data.detected_corners = corner_selected_np.reshape(-1).tolist()
@@ -108,6 +107,8 @@ class image():
                     data.detected_ids = ids_np.tolist()
                     # publish the message to the topic
                     pub.publish(data)
+                    print("RGB")
+                    print(data)
                     # write to csv
                     for i in range(ids.size):
                         data = {"surface ID":"sense"+str(self.sense)+"_"+str(ids[i]),
@@ -117,12 +118,9 @@ class image():
                                 "feasibility":0}
                         df = pd.DataFrame(data)
                         df.to_csv(os.path.join(path,"data.csv"), mode='a', header=False)
-                    # RGB image
-                    print("sense",str(self.sense))
-                    print("view",str(self.view))
-                    print("Collected RGB data(csv and image)")
                     file = "sense"+str(self.sense)+"_"+str(self.view)+".png"
                     cv2.imwrite(os.path.join(path,file),frame)
+                    self.view = self.view+1
             # Publish
             pub_frame = rospy.Publisher("image_color_detected", Image, queue_size=10)
             msg_frame = CvBridge().cv2_to_imgmsg(frame, "bgr8")
@@ -142,6 +140,7 @@ if __name__ == '__main__':
     # Initialize the node
     rospy.init_node('rgb_frame',anonymous=True)
     rospy.sleep(2)
+    print("Capture Sense1_View1")
     # Initialize the CvBridge class
     bridge = CvBridge()
     # Subscribe
