@@ -7,6 +7,7 @@ import pyrealsense2 as rs2
 import numpy as np
 import sys
 import os
+path = "/home/yc/catkin_ws/src/realsense-ros/realsense2_camera/dataset/RGB/"
 import pandas as pd
 from realsense2_camera.msg import color_data
 
@@ -17,6 +18,8 @@ class image():
         rospy.Subscriber("/camera/color/image_rect_color", Image, self.color_callback)
         self.mtx = np.empty([3, 3])
         self.dist = np.empty([1, 5])
+        self.sense = 1
+        self.view = 0
 
     def color_info(self, data):
         self.mtx = np.array(data.K).reshape(3, 3)
@@ -89,52 +92,56 @@ class image():
                     cv2.drawFrameAxes(frame, self.mtx, self.dist, rvec, tvec, 1)
                 rvecs_np = np.reshape(rvecs, (ids.size,3))
                 tvecs_np = np.reshape(tvecs, (ids.size,3))
-                # RGB data
-                #publish the topic
-                pub = rospy.Publisher('color_data', color_data, queue_size=10)
-                data = color_data()
-                corner_selected_np=np.asarray(corner_selected, dtype=int)
-                data.detected_corners = corner_selected_np.reshape(-1).tolist()
-                # publish the message to the topic
-                pub.publish(data)
-                for i in corner_selected_np:
-                    x0 = min(i[0][0],i[1][0],i[2][0],i[3][0])
-                    y0 = min(i[0][1],i[1][1],i[2][1],i[3][1])
-                    x1 = max(i[0][0],i[1][0],i[2][0],i[3][0])
-                    y1 = max(i[0][1],i[1][1],i[2][1],i[3][1])
-                    # collect data
-                    path = "/home/yc/catkin_ws/src/realsense-ros/realsense2_camera/dataset/raw"
-                    cv2.imwrite(os.path.join(path,"rgb.png"),frame[y0:y1,x0:x1])
-                # for i in range(ids.size):
-                #     print("id:",ids[i])
-                #     print("corner:",corner_selected[i])
-                #     print("center:",centers[i])
-                #     print("M:",M[i])
-                #     print("rvec",rvecs_np[i])
-                #     print("tvec",tvecs_np[i])
-                #     print("-----------------------------")
+                if len(corner_selected)==2:
+                    line = "Capture Sense"+str(self.sense)+"_"+"View"+str(self.view)
+                    print(line)
+                    self.view = self.view+1
+                    rospy.sleep(5)
+                    #publish the topic
+                    pub = rospy.Publisher('color_data', color_data, queue_size=10)
+                    data = color_data()
+                    corner_selected_np = np.asarray(corner_selected, dtype=int)
+                    data.detected_corners = corner_selected_np.reshape(-1).tolist()
+                    data.sense = self.sense
+                    data.view = self.view
+                    ids_np = np.asarray(ids, dtype=int)
+                    data.detected_ids = ids_np.tolist()
+                    # publish the message to the topic
+                    pub.publish(data)
+                    # write to csv
+                    for i in range(ids.size):
+                        data = {"surface ID":"sense"+str(self.sense)+"_"+str(ids[i]),
+                                "view":self.view,
+                                "rvec":[rvecs_np[i]],
+                                "tvec":[tvecs_np[i]],
+                                "feasibility":0}
+                        df = pd.DataFrame(data)
+                        df.to_csv(os.path.join(path,"data.csv"), mode='a', header=False)
+                    # RGB image
+                    print("sense",str(self.sense))
+                    print("view",str(self.view))
+                    print("Collected RGB data(csv and image)")
+                    file = "sense"+str(self.sense)+"_"+str(self.view)+".png"
+                    cv2.imwrite(os.path.join(path,file),frame)
+            # Publish
+            pub_frame = rospy.Publisher("image_color_detected", Image, queue_size=10)
+            msg_frame = CvBridge().cv2_to_imgmsg(frame, "bgr8")
+            pub_frame.publish(msg_frame)
         else:
             frame = image_rgb
-
-        # Collect data
-        # path = "/home/yc/catkin_ws/src/realsense-ros/realsense2_camera/dataset/raw"
-        # if ids is not None:
-        #     if len(ids)==1:
-        #         cv2.imwrite(os.path.join(path,"color.jpg"),frame)
-
-        # Publish
-        pub_frame = rospy.Publisher("image_color_detected", Image, queue_size=10)
-        msg_frame = CvBridge().cv2_to_imgmsg(frame, "bgr8")
-        pub_frame.publish(msg_frame)
+            # Publish
+            pub_frame = rospy.Publisher("image_color_detected", Image, queue_size=10)
+            msg_frame = CvBridge().cv2_to_imgmsg(frame, "bgr8")
+            pub_frame.publish(msg_frame)
 
 if __name__ == '__main__':
     # Aruco marker dictionaries
     dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_1000)
     # Detector parameters
     parameters = cv2.aruco.DetectorParameters_create()
-
     # Initialize the node
     rospy.init_node('rgb_frame',anonymous=True)
+    rospy.sleep(2)
     # Initialize the CvBridge class
     bridge = CvBridge()
     # Subscribe
