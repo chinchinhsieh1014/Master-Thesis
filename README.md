@@ -1,16 +1,19 @@
 # Safe Landing Decision Based on Logistic regression For Visual-based UAV
 > This project aims to [***]
+[video]
+- [Requirement](##Requirement)
+- [Dataset](##Dataset)
+- [Classifier](##Classifier)
+- [Result](##Result)
 
+---
 ## Requirement
 ### Hardware
 - [Intel RealSense Depth Camera D415](https://dev.intelrealsense.com/docs/docs-get-started)
 ### Software
 - Environment: Ubuntu 20.04
 - ROS Noetic Ninjemys
-
-## Step
-1. collect data
-
+---
 ## Dataset
 ### Data Collection
 - Markers are on different surfaces and orientations
@@ -35,3 +38,7 @@
      - 0: impossible
      - 1: difficult
      - 2: easy
+---
+## Classifier
+---
+## Result
