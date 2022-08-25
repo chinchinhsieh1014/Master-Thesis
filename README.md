@@ -1,5 +1,5 @@
-# Title
-> detail
+# Safe Landing Decision Based on Logistic regression For Visual-based UAV
+> This project aims to [***]
 
 ## Requirement
 ### Hardware
