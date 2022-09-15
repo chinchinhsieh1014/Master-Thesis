@@ -1,6 +1,10 @@
 # Safe Landing Decision Based on Logistic regression For Visual-based UAV
 > This project aims to [***]
-[video]
+
+
+https://user-images.githubusercontent.com/79919595/190517989-98f16aae-07e1-4108-9053-38329ca081bd.mp4
+
+
 - [Requirement](#Requirement)
 - [Dataset](#Dataset)
 - [Classifier](#Classifier)
