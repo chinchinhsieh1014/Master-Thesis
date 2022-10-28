@@ -50,4 +50,4 @@ https://user-images.githubusercontent.com/79919595/190517989-98f16aae-07e1-4108-
 
 ---
 ## Result
-
+The result shows it has 0.85 accuracy and 0.911 precision. Lastly, I picked 4 special cases - labelled 1 but predicted 0(incorrect), labelled 0 but predicted 1(incorrect), labelled 1 and predicted 1(correct), labelled 0 and predicted 0(correct), to evaluate the performance of the model. In this project, I learned how to deal with massive data, apply machine learning method, and also analyze the model with different tools. 
