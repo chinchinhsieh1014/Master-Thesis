@@ -1,14 +1,14 @@
 # Safe Landing Decision Based on Logistic regression For Visual-based UAV
-> This project aims to [***]
 
+> This project aims to take information collected from a depth camera on a drone and to decide if the position is safe to land or not based on a trained logistic regression classifier.
+
+### Robotics(ROS and Rviz) + Computer vision(Depth camera, OpenCV and Point cloud)
+The image captured by the depth camera was processed in a ROS package, and it transferred the 2D world to 3D world by adding depth information. Firstly, detect ArUco markers from the RGB image in the RGB node. It will provide the location of the marker.(At this step, if the marker is too small, it will not be detected. This helps for reducing uncessary detection.) Then, get the depth of the marker from the depth image in the depth node. The distance of the marker will be published through the topic. Lastly, the point node subscribe to the topic and transfer it into the 3D world. It could be presented in cloud point to simulate the real-world situation.
+
+### Machine learning (classifier)
+Each case was manually labelled to safe/unsafe. Because it is a binary classification problem and the number of parameters is 3, a logistic regression classifier was trained by gradient descent. After trying several learning rates and iterations, the ideal parameters were found. Then, analyzed the model with the confused matrix and the decision boundary.
 
 https://user-images.githubusercontent.com/79919595/190517989-98f16aae-07e1-4108-9053-38329ca081bd.mp4
-
-
-- [Requirement](#Requirement)
-- [Dataset](#Dataset)
-- [Classifier](#Classifier)
-- [Result](#Result)
 
 ---
 ## Requirement
@@ -17,6 +17,9 @@ https://user-images.githubusercontent.com/79919595/190517989-98f16aae-07e1-4108-
 ### Software
 - Environment: Ubuntu 20.04
 - ROS Noetic Ninjemys
+- OpenCV
+- Open3d
+- Python
 ---
 ## Dataset
 ### Data Collection
@@ -44,5 +47,7 @@ https://user-images.githubusercontent.com/79919595/190517989-98f16aae-07e1-4108-
      - 2: easy
 ---
 ## Classifier
+
 ---
 ## Result
+
